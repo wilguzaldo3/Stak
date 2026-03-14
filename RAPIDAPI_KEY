@@ -1,1 +1,48 @@
+export default async function handler(req, res) {
+    const { ticker } = req.query;
+    const key = process.env.RAPIDAPI_KEY; // Your RapidAPI Key
 
+    if (!ticker) return res.status(400).json({ error: "No ticker" });
+
+    const options = {
+        method: 'GET',
+        headers: { 'x-rapidapi-key': key, 'x-rapidapi-host': 'yh-finance.p.rapidapi.com' }
+    };
+
+    try {
+        // 1. Get Price & Profile from Yahoo Finance
+        const summaryRes = await fetch(`https://yh-finance.p.rapidapi.com/stock/v2/get-summary?symbol=${ticker}`, options);
+        const summary = await summaryRes.json();
+
+        // 2. Get Recent News Headlines
+        const newsRes = await fetch(`https://yh-finance.p.rapidapi.com/news/v2/list?region=US&snippetCount=5`, options);
+        const newsData = await newsRes.json();
+
+        // 3. Create Candlestick Data (Fake for now to ensure chart works)
+        const price = summary.price.regularMarketPrice.raw;
+        const chartData = [];
+        const now = Math.floor(Date.now() / 1000);
+        for (let i = 30; i >= 0; i--) {
+            chartData.push({
+                time: now - (i * 86400),
+                open: price * (0.98 + Math.random() * 0.04),
+                high: price * 1.03,
+                low: price * 0.97,
+                close: price * (0.98 + Math.random() * 0.04)
+            });
+        }
+
+        res.status(200).json({
+            price: summary.price.regularMarketPrice.fmt,
+            change: summary.price.regularMarketChangePercent.fmt,
+            name: summary.price.longName,
+            exchange: summary.price.exchangeName,
+            marketCap: summary.summaryDetail.marketCap.fmt,
+            news: newsData.main.stream.slice(0, 5),
+            chart: chartData
+        });
+
+    } catch (e) {
+        res.status(500).json({ error: "Connect RapidAPI in Vercel Settings" });
+    }
+}
