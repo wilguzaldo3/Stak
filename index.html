@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAK | Stock Trading Analyzer Knowledge</title>
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
       --bg-deep: #06070a;
@@ -64,7 +63,12 @@
       box-shadow: var(--shadow);
     }
 
-    .brand { font-weight: 900; font-size: 1.45rem; letter-spacing: -0.04em; }
+    .brand {
+      font-weight: 900;
+      font-size: 1.45rem;
+      letter-spacing: -0.04em;
+    }
+
     .brand span { color: var(--accent-soft); }
 
     .search-box {
@@ -78,12 +82,30 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--glow); outline: none; }
-    .search-box input { background: transparent; border: none; color: var(--text-high); padding: 10px; width: 100%; font-size: 1rem; outline: none; }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--glow);
+      outline: none;
+    }
 
-    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .search-box input {
+      background: transparent;
+      border: none;
+      color: var(--text-high);
+      padding: 10px;
+      width: 100%;
+      font-size: 1rem;
+      outline: none;
+    }
 
-    .mode-btn, .primary-btn {
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mode-btn,
+    .primary-btn {
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text-high);
@@ -101,11 +123,37 @@
       box-shadow: 0 16px 40px var(--glow);
     }
 
-    .quick-note { max-width: 1400px; margin: 0 auto 20px auto; color: var(--text-low); font-size: 0.9rem; line-height: 1.6; padding: 0 4px; }
+    .mode-btn:hover,
+    .primary-btn:hover {
+      transform: translateY(-1px);
+    }
 
-    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; max-width: 1400px; margin: 0 auto; }
+    .quick-note {
+      max-width: 1400px;
+      margin: 0 auto 20px auto;
+      color: var(--text-low);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      padding: 0 4px;
+    }
 
-    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 24px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
 
     .main-ticker { grid-column: span 8; }
     .sidebar { grid-column: span 4; }
@@ -120,7 +168,12 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .subline { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .subline {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
     .badge {
       background: color-mix(in srgb, var(--accent) 16%, transparent);
@@ -133,8 +186,20 @@
       width: fit-content;
     }
 
-    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-    .metric-card { background: var(--surface-2); padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .metric-card {
+      background: var(--surface-2);
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
     .metric-label { color: var(--text-low); font-size: 0.8rem; margin-bottom: 6px; }
     .metric-val { font-size: 1.1rem; font-weight: 700; }
 
@@ -142,43 +207,157 @@
       margin-top: 20px;
       border: 1px solid var(--border);
       border-radius: 16px;
-      background: var(--surface-2);
-      overflow: hidden; /* Important for TradingView */
-      height: 400px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 35%), var(--surface-2);
+      padding: 14px;
     }
 
-    .news-item { padding: 15px 0; border-bottom: 1px solid var(--border); transition: transform 0.2s; }
+    .chart-placeholder {
+      height: 250px;
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+    }
+
+    .news-item {
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+      transition: transform 0.2s;
+    }
+
     .news-item:hover { transform: translateX(5px); }
     .news-tag { color: var(--accent-soft); font-size: 0.72rem; font-weight: 800; }
 
-    .action-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
-    .buy-action { background: linear-gradient(135deg, var(--accent-soft), var(--accent)); color: #fff; box-shadow: 0 16px 40px var(--glow); }
+    .action-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-    .section-title { margin-bottom: 20px; font-weight: 800; border-left: 3px solid var(--accent); padding-left: 15px; }
+    .buy-action {
+      background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+      color: #fff;
+      box-shadow: 0 16px 40px var(--glow);
+    }
 
-    .recommendation-wrap { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; align-items: center; }
+    .section-title {
+      margin-bottom: 20px;
+      font-weight: 800;
+      border-left: 3px solid var(--accent);
+      padding-left: 15px;
+    }
 
-    .signal-scale { position: relative; margin-top: 18px; padding-top: 24px; }
-    .signal-bar { height: 16px; border-radius: 999px; background: linear-gradient(90deg, var(--down-red) 0 33.33%, var(--hold-yellow) 33.33% 66.66%, var(--up-green) 66.66% 100%); position: relative; }
-    .signal-marker { position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; transition: left 0.35s ease; }
-    .signal-marker .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 4px solid var(--accent-soft); box-shadow: 0 0 0 6px var(--glow); }
-    .signal-marker .stem { width: 2px; height: 26px; background: var(--accent-soft); }
+    .recommendation-wrap {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+      align-items: center;
+    }
 
-    .signal-badges { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85rem; font-weight: 700; }
+    .signal-copy h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.4rem;
+    }
+
+    .signal-copy p {
+      margin: 0;
+      color: var(--text-low);
+      line-height: 1.65;
+    }
+
+    .signal-scale {
+      position: relative;
+      margin-top: 18px;
+      padding-top: 24px;
+    }
+
+    .signal-bar {
+      height: 16px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--down-red) 0 33.33%, var(--hold-yellow) 33.33% 66.66%, var(--up-green) 66.66% 100%);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+
+    .signal-marker {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: left 0.35s ease;
+    }
+
+    .signal-marker .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 4px solid var(--accent-soft);
+      box-shadow: 0 0 0 6px var(--glow);
+    }
+
+    .signal-marker .stem {
+      width: 2px;
+      height: 26px;
+      background: var(--accent-soft);
+      opacity: 0.9;
+    }
+
+    .signal-badges {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
     .sell { color: var(--down-red); }
     .hold { color: var(--hold-yellow); }
     .buy { color: var(--up-green); }
 
-    .ai-chip { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 12px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-soft); font-size: 0.82rem; font-weight: 800; }
+    .ai-chip,
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      color: var(--accent-soft);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
 
-    @media (max-width: 1100px) { .main-ticker, .sidebar, .full-width { grid-column: span 12; } }
+    @media (max-width: 1100px) {
+      .main-ticker, .sidebar, .full-width { grid-column: span 12; }
+      .recommendation-wrap { grid-template-columns: 1fr; }
+      .nav-glass { flex-wrap: wrap; }
+      .search-box { width: 100%; }
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 18px; }
+      .price-hero { font-size: 3rem; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .nav-right { width: 100%; justify-content: space-between; }
+    }
   </style>
 </head>
 <body>
   <nav class="nav-glass">
     <div class="brand">ST<span>AK</span></div>
     <div class="search-box">
-      <input type="text" id="ticker" placeholder="ENTER SYMBOL (AAPL, BTC, TSLA)..." autocomplete="off" />
+      <input type="text" id="ticker" placeholder="ENTER SYMBOL (AAPL, TSLA, MSFT, NVDA)..." autocomplete="off" />
       <button id="loadBtn" class="primary-btn">Load</button>
     </div>
     <div class="nav-right">
@@ -187,6 +366,10 @@
     </div>
   </nav>
 
+  <div class="quick-note">
+    Users only need to enter a ticker. This frontend is now designed to call a single backend endpoint that returns all market data, news, chart history, and AI positioning in one response.
+  </div>
+
   <div class="grid">
     <div class="panel main-ticker">
       <div class="badge" id="marketBadge">Awaiting Data</div>
@@ -194,122 +377,290 @@
       <div class="price-hero" id="priceDisplay">$0.00</div>
       <div class="subline">
         <div id="changeDisplay" style="color: var(--up-green); font-weight: 800;">+0.00% (+$0.00) ▲</div>
-        <div class="status-chip" id="providerStatus" style="color:var(--text-low)">Ready</div>
+        <div class="status-chip" id="providerStatus">Ready</div>
       </div>
 
-      <div class="chart-wrap" id="chartContainer"></div>
+      <div class="chart-wrap">
+        <canvas id="priceChart" class="chart-placeholder"></canvas>
+      </div>
 
       <div class="metric-grid">
-        <div class="metric-card"><div class="metric-label">MARKET CAP</div><div class="metric-val" id="mktCap">—</div></div>
-        <div class="metric-card"><div class="metric-label">OPEN / PREV CLOSE</div><div class="metric-val" id="openPrev">—</div></div>
-        <div class="metric-card"><div class="metric-label">DAY RANGE</div><div class="metric-val" id="dayRange">—</div></div>
-        <div class="metric-card"><div class="metric-label">AI CONFIDENCE</div><div class="metric-val" id="aiConfidence">—</div></div>
+        <div class="metric-card">
+          <div class="metric-label">MARKET CAP</div>
+          <div class="metric-val" id="mktCap">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">OPEN / PREV CLOSE</div>
+          <div class="metric-val" id="openPrev">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">DAY RANGE</div>
+          <div class="metric-val" id="dayRange">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">AI CONFIDENCE</div>
+          <div class="metric-val" id="aiConfidence">—</div>
+        </div>
       </div>
     </div>
 
     <div class="panel sidebar">
+      <div class="card-title" style="color: var(--text-low); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Consensus Rating</div>
       <div id="consensusText" style="font-size: 2.5rem; font-weight: 800; color: var(--accent-soft); margin: 10px 0;">WAITING</div>
-      <p id="summaryText" style="color: var(--text-low); font-size: 0.95rem; line-height: 1.7;">Enter a ticker to begin.</p>
+      <p id="summaryText" style="color: var(--text-low); font-size: 0.95rem; line-height: 1.7;">
+        Enter a ticker and STAK will load the live market snapshot.
+      </p>
       <button class="action-btn buy-action" id="refreshBtn">Refresh Data</button>
+
       <hr style="border: 0; border-top: 1px solid var(--border); margin: 30px 0;" />
-      <div style="display: flex; justify-content: space-between; margin-bottom: 15px;"><span>TICKER</span><span id="tickerEcho">—</span></div>
-      <div style="display: flex; justify-content: space-between; margin-bottom: 15px;"><span>EXCHANGE</span><span id="exchangeDisplay">—</span></div>
-      <div style="display: flex; justify-content: space-between;"><span>LAST UPDATED</span><span id="updatedAt">—</span></div>
+
+      <div class="metric-row" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <span style="color: var(--text-low);">TICKER</span>
+        <span id="tickerEcho">—</span>
+      </div>
+      <div class="metric-row" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <span style="color: var(--text-low);">EXCHANGE</span>
+        <span id="exchangeDisplay">—</span>
+      </div>
+      <div class="metric-row" style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-low);">LAST UPDATED</span>
+        <span id="updatedAt">—</span>
+      </div>
     </div>
 
     <div class="panel full-width">
       <div class="section-title">LIVE INTELLIGENCE FEED</div>
-      <div id="newsList"></div>
+      <div id="newsList">
+        <div class="news-item" style="border-bottom: 0; padding-bottom: 0;">
+          <span class="news-tag">READY</span>
+          <div style="font-weight: 700; margin: 5px 0;">Load a symbol to pull recent company headlines.</div>
+          <div style="color: var(--text-low); font-size: 0.75rem;">Unified backend feed</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel full-width">
+      <div class="section-title">AI BUY / SELL / HOLD POSITIONING</div>
+      <div class="recommendation-wrap">
+        <div class="signal-copy">
+          <h3 id="signalHeadline">AI intelligence currently leans <span style="color: var(--hold-yellow);">Hold</span></h3>
+          <p id="signalBody">
+            STAK blends price momentum, intraday move, and recent trend into a single recommendation band. Once data is loaded, the recommendation meter updates automatically.
+          </p>
+          <div class="ai-chip" id="aiChip">AI Placement • Waiting for data</div>
+        </div>
+
+        <div class="signal-scale">
+          <div class="signal-marker" id="signalMarker" aria-label="AI recommendation marker">
+            <div class="dot"></div>
+            <div class="stem"></div>
+          </div>
+          <div class="signal-bar"></div>
+          <div class="signal-badges">
+            <span class="sell">SELL</span>
+            <span class="hold">HOLD</span>
+            <span class="buy">BUY</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
     const tickerInput = document.getElementById('ticker');
     const modeToggle = document.getElementById('modeToggle');
-    const chartContainer = document.getElementById('chartContainer');
+    const body = document.body;
+    const loadBtn = document.getElementById('loadBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const providerStatus = document.getElementById('providerStatus');
+    const chartCanvas = document.getElementById('priceChart');
+    const ctx = chartCanvas.getContext('2d');
 
     let isLight = false;
-    let chart, candleSeries;
-
-    // 3. INITIALIZE TRADINGVIEW CHART
-    function initChart() {
-      chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: 400,
-        layout: { 
-            background: { color: isLight ? '#ffffff' : '#171c25' }, 
-            textColor: isLight ? '#0b1220' : '#d1d4dc' 
-        },
-        grid: {
-            vertLines: { color: isLight ? '#eef2f9' : '#2B2B43' },
-            horzLines: { color: isLight ? '#eef2f9' : '#2B2B43' },
-        },
-        timeScale: { borderColor: isLight ? '#eef2f9' : '#2B2B43' },
-      });
-
-      candleSeries = chart.addCandlestickSeries({
-        upColor: '#1ed760', 
-        downColor: '#ff4d6d', 
-        borderVisible: false,
-        wickUpColor: '#1ed760', 
-        wickDownColor: '#ff4d6d',
-      });
-
-      window.addEventListener('resize', () => {
-        chart.applyOptions({ width: chartContainer.clientWidth });
-      });
-    }
-
-    initChart();
+    let currentTicker = '';
 
     modeToggle.addEventListener('click', () => {
       isLight = !isLight;
-      document.body.classList.toggle('light', isLight);
+      body.classList.toggle('light', isLight);
       modeToggle.textContent = isLight ? '☀ Day Mode' : '☾ Night Mode';
-      chart.applyOptions({
-        layout: { background: { color: isLight ? '#ffffff' : '#171c25' }, textColor: isLight ? '#0b1220' : '#d1d4dc' }
-      });
+      drawChart(window.__lastChartData || []);
     });
 
-    // 4. LOAD TICKER DATA
-    async function loadTicker() {
-      const symbol = tickerInput.value.toUpperCase().trim();
+    tickerInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loadTicker();
+    });
+
+    loadBtn.addEventListener('click', loadTicker);
+    refreshBtn.addEventListener('click', () => currentTicker && loadTicker(currentTicker));
+
+    function fmtCurrency(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+      const abs = Math.abs(Number(value));
+      if (abs >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+      if (abs >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+      if (abs >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+      return `$${Number(value).toFixed(2)}`;
+    }
+
+    function fmtPct(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+      return `${Math.abs(Number(value)).toFixed(2)}%`;
+    }
+
+    function setChange(change, pct) {
+      const el = document.getElementById('changeDisplay');
+      const up = Number(change) >= 0;
+      const sign = up ? '+' : '-';
+      el.style.color = up ? 'var(--up-green)' : 'var(--down-red)';
+      el.textContent = `${sign}${fmtPct(pct)} (${sign}$${Math.abs(Number(change || 0)).toFixed(2)}) ${up ? '▲' : '▼'}`;
+    }
+
+    function updateTime() {
+      document.getElementById('updatedAt').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function scoreSignal(quote) {
+      const pct = Number(quote.dp || 0);
+      const driftFromOpen = quote.o ? ((Number(quote.c) - Number(quote.o)) / Number(quote.o)) * 100 : 0;
+      let score = 50 + pct * 3 + driftFromOpen * 4;
+      score = Math.max(0, Math.min(100, score));
+
+      let label = 'HOLD';
+      let color = 'var(--hold-yellow)';
+      if (score < 33) { label = 'SELL'; color = 'var(--down-red)'; }
+      else if (score > 66) { label = 'BUY'; color = 'var(--up-green)'; }
+
+      document.getElementById('aiConfidence').textContent = `${Math.round(score)} / 100`;
+      document.getElementById('consensusText').textContent = label;
+      document.getElementById('consensusText').style.color = color;
+      document.getElementById('signalHeadline').innerHTML = `AI intelligence currently leans <span style="color: ${color};">${label}</span>`;
+      document.getElementById('signalBody').textContent = `Signal score is driven by current percentage move, change versus the open, and short-term trend. A score of ${Math.round(score)} places this ticker in the ${label.toLowerCase()} zone right now.`;
+      document.getElementById('aiChip').textContent = `AI Placement • ${Math.round(score)} / 100`;
+      document.getElementById('signalMarker').style.left = `${score}%`;
+      return { score, label };
+    }
+
+    function populateNews(items) {
+      const newsList = document.getElementById('newsList');
+      if (!items || !items.length) {
+        newsList.innerHTML = `
+          <div class="news-item" style="border-bottom: 0; padding-bottom: 0;">
+            <span class="news-tag">NO NEWS</span>
+            <div style="font-weight: 700; margin: 5px 0;">No recent headlines were returned for this ticker.</div>
+            <div style="color: var(--text-low); font-size: 0.75rem;">Try another symbol or refresh again.</div>
+          </div>`;
+        return;
+      }
+
+      newsList.innerHTML = items.slice(0, 3).map((item, idx, arr) => `
+        <div class="news-item" style="${idx === arr.length - 1 ? 'border-bottom:0;padding-bottom:0;' : ''}">
+          <span class="news-tag">${item.source || 'NEWS'}</span>
+          <div style="font-weight: 700; margin: 5px 0;">${item.headline || item.title || 'Headline unavailable'}</div>
+          <div style="color: var(--text-low); font-size: 0.75rem;">${item.publishedAt || item.time || 'Recent'}</div>
+        </div>
+      `).join('');
+    }
+
+    function drawChart(data) {
+      const canvas = chartCanvas;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const w = rect.width;
+      const h = rect.height;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border');
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 5; i++) {
+        const y = (h / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      if (!data || data.length < 2) {
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-low');
+        ctx.font = '14px Inter, sans-serif';
+        ctx.fillText('Load a ticker to draw price history', 16, 26);
+        return;
+      }
+
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = Math.max(max - min, 1);
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      const accentSoft = getComputedStyle(document.documentElement).getPropertyValue('--accent-soft').trim();
+      const gradient = ctx.createLinearGradient(0, 0, w, 0);
+      gradient.addColorStop(0, accentSoft);
+      gradient.addColorStop(1, accent);
+
+      ctx.beginPath();
+      data.forEach((value, index) => {
+        const x = (index / (data.length - 1)) * (w - 24) + 12;
+        const y = h - ((value - min) / range) * (h - 32) - 16;
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = accent;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function renderData(symbol, data) {
+      const { quote = {}, profile = {}, news = [], chart = [] } = data;
+      currentTicker = symbol;
+
+      document.getElementById('nameDisplay').textContent = profile.name || profile.ticker || symbol;
+      document.getElementById('tickerEcho').textContent = symbol;
+      document.getElementById('exchangeDisplay').textContent = profile.exchange || '—';
+      document.getElementById('priceDisplay').textContent = fmtCurrency(quote.c);
+      document.getElementById('mktCap').textContent = profile.marketCap ? fmtCurrency(profile.marketCap) : '—';
+      document.getElementById('openPrev').textContent = `${fmtCurrency(quote.o)} / ${fmtCurrency(quote.pc)}`;
+      document.getElementById('dayRange').textContent = `${fmtCurrency(quote.l)} – ${fmtCurrency(quote.h)}`;
+      document.getElementById('summaryText').textContent = `${profile.name || symbol} is trading at ${fmtCurrency(quote.c)} with an intraday move of ${Number(quote.dp || 0).toFixed(2)}%.`;
+      document.getElementById('marketBadge').textContent = Number(quote.dp) >= 0 ? 'Bullish Momentum' : 'Risk-Off Pressure';
+      document.getElementById('providerStatus').textContent = 'Live data loaded';
+      setChange(quote.d, quote.dp);
+      populateNews(news);
+      drawChart(chart);
+      window.__lastChartData = chart;
+      scoreSignal(quote);
+      updateTime();
+    }
+
+    async function loadTicker(forcedTicker) {
+      const symbol = (forcedTicker || tickerInput.value).toUpperCase().trim();
       if (!symbol) return;
-      
-      document.getElementById('providerStatus').textContent = 'Loading...';
+
+      providerStatus.textContent = 'Loading market data...';
+      document.getElementById('tickerEcho').textContent = symbol;
 
       try {
-        const res = await fetch(`/api/stak?ticker=${symbol}`);
-        const data = await res.json();
-
-        // Update UI
-        document.getElementById('nameDisplay').textContent = data.profile.name;
-        document.getElementById('priceDisplay').textContent = `$${data.quote.c.toFixed(2)}`;
-        document.getElementById('tickerEcho').textContent = symbol;
-        document.getElementById('mktCap').textContent = `$${(data.profile.marketCap / 1e9).toFixed(2)}B`;
-        document.getElementById('openPrev').textContent = `${data.quote.o} / ${data.quote.pc}`;
-        document.getElementById('dayRange').textContent = `${data.quote.l} - ${data.quote.h}`;
-        
-        // Update Chart with Candlesticks
-        candleSeries.setData(data.chart);
-        chart.timeScale().fitContent();
-
-        // Update News
-        document.getElementById('newsList').innerHTML = data.news.map(item => `
-            <div class="news-item">
-                <span class="news-tag">${item.source}</span>
-                <div style="font-weight:700">${item.headline}</div>
-            </div>
-        `).join('');
-
-        document.getElementById('providerStatus').textContent = 'Live Data';
-      } catch (err) {
-        document.getElementById('providerStatus').textContent = 'Error loading';
+        const response = await fetch(`/api/stak?ticker=${encodeURIComponent(symbol)}`);
+        if (!response.ok) throw new Error('Backend data request failed.');
+        const data = await response.json();
+        renderData(symbol, data);
+      } catch (error) {
+        providerStatus.textContent = 'Load failed';
+        document.getElementById('summaryText').textContent = 'This frontend now expects a backend endpoint at /api/stak that handles all provider keys privately and returns one unified response.';
+        document.getElementById('newsList').innerHTML = `
+          <div class="news-item" style="border-bottom: 0; padding-bottom: 0;">
+            <span class="news-tag">SETUP</span>
+            <div style="font-weight: 700; margin: 5px 0;">Backend endpoint missing</div>
+            <div style="color: var(--text-low); font-size: 0.75rem;">Create /api/stak?ticker=SYMBOL so users only enter the ticker and never see API keys.</div>
+          </div>`;
+        drawChart([]);
       }
     }
 
-    document.getElementById('loadBtn').addEventListener('click', loadTicker);
-    tickerInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') loadTicker(); });
+    drawChart([]);
   </script>
 </body>
 </html>
