@@ -1,308 +1,666 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RH Deep Dive Dashboard</title>
-    <style>
-        /* CSS: Black and Blue Theme */
-        :root {
-            --bg-black: #000000;
-            --card-dark: #121212;
-            --rh-blue: #00D1FF;
-            --rh-blue-hover: #00A3CC;
-            --text-main: #FFFFFF;
-            --text-muted: #8B8B8B;
-            --border-color: #2A2A2A;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STAK | Stock Trading Analyzer Knowledge</title>
+  <style>
+    :root {
+      --bg-deep: #06070a;
+      --surface: #10141b;
+      --surface-2: #171c25;
+      --accent: #3b82f6;
+      --accent-soft: #60a5fa;
+      --glow: rgba(59, 130, 246, 0.28);
+      --border: rgba(255, 255, 255, 0.08);
+      --text-high: #ffffff;
+      --text-low: #8b93a7;
+      --up-green: #1ed760;
+      --hold-yellow: #f4c542;
+      --down-red: #ff4d6d;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    }
 
-        body {
-            background-color: var(--bg-black);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    body.light {
+      --bg-deep: #f5f7fb;
+      --surface: #ffffff;
+      --surface-2: #eef2f9;
+      --accent: #2563eb;
+      --accent-soft: #3b82f6;
+      --glow: rgba(59, 130, 246, 0.18);
+      --border: rgba(10, 18, 34, 0.08);
+      --text-high: #0b1220;
+      --text-low: #667085;
+      --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    }
 
-        h1, h2, h3, h4 { margin: 0 0 10px 0; }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            width: 100%;
-            max-width: 1000px;
-        }
+    * { box-sizing: border-box; }
 
-        .header h1 {
-            color: var(--rh-blue);
-            font-size: 2.5rem;
-            letter-spacing: -1px;
-        }
+    body {
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 30%), var(--bg-deep);
+      color: var(--text-high);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 40px;
+      letter-spacing: -0.02em;
+      transition: background 0.35s ease, color 0.35s ease;
+    }
 
-        .search-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 40px;
-        }
+    .nav-glass {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 20px;
+      background: color-mix(in srgb, var(--surface) 82%, transparent);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      margin-bottom: 22px;
+      position: sticky;
+      top: 20px;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
 
-        input[type="text"] {
-            background-color: var(--card-dark);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 15px 20px;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            width: 300px;
-            outline: none;
-            text-transform: uppercase;
-            transition: border-color 0.2s;
-        }
+    .brand {
+      font-weight: 900;
+      font-size: 1.45rem;
+      letter-spacing: -0.04em;
+    }
 
-        input[type="text"]:focus {
-            border-color: var(--rh-blue);
-        }
+    .brand span { color: var(--accent-soft); }
 
-        button {
-            background-color: var(--rh-blue);
-            color: var(--bg-black);
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 14px;
+      width: 460px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        button:hover {
-            background-color: var(--rh-blue-hover);
-        }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--glow);
+      outline: none;
+    }
 
-        /* Dashboard Layout */
-        .dashboard {
-            display: none; /* Hidden until search */
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-        }
+    .search-box input {
+      background: transparent;
+      border: none;
+      color: var(--text-high);
+      padding: 10px;
+      width: 100%;
+      font-size: 1rem;
+      outline: none;
+    }
 
-        .card {
-            background-color: var(--card-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-        .card-title {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
+    .mode-btn,
+    .primary-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-high);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.25s ease;
+    }
 
-        /* Specific Card Styles */
-        .price-large {
-            font-size: 3rem;
-            font-weight: bold;
-            margin: 10px 0;
-        }
+    .primary-btn {
+      background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+      color: #fff;
+      border: none;
+      box-shadow: 0 16px 40px var(--glow);
+    }
 
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
+    .mode-btn:hover,
+    .primary-btn:hover {
+      transform: translateY(-1px);
+    }
 
-        .metric-value { font-weight: bold; }
+    .quick-note {
+      max-width: 1400px;
+      margin: 0 auto 20px auto;
+      color: var(--text-low);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      padding: 0 4px;
+    }
 
-        .recommendation {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-top: 10px;
-        }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
 
-        .rec-buy { background-color: rgba(0, 209, 255, 0.2); color: var(--rh-blue); }
-        .rec-hold { background-color: rgba(255, 193, 7, 0.2); color: #FFC107; }
-        .rec-sell { background-color: rgba(255, 82, 82, 0.2); color: #FF5252; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
 
-        .news-item {
-            margin-bottom: 15px;
-        }
-        
-        .news-item a {
-            color: var(--text-main);
-            text-decoration: none;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .news-item a:hover { color: var(--rh-blue); }
-        .news-item .source { font-size: 0.8rem; color: var(--text-muted); }
+    .main-ticker { grid-column: span 8; }
+    .sidebar { grid-column: span 4; }
+    .full-width { grid-column: span 12; }
 
-        .col-span-2 { grid-column: span 2; }
-        .col-span-3 { grid-column: span 3; }
+    .price-hero {
+      font-size: 4.5rem;
+      font-weight: 800;
+      margin: 15px 0;
+      background: linear-gradient(to right, var(--text-high), var(--text-low));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-        /* Loading State */
-        .loader {
-            display: none;
-            color: var(--rh-blue);
-            font-size: 1.2rem;
-            margin-top: 20px;
-        }
-    </style>
+    .subline {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: color-mix(in srgb, var(--accent) 16%, transparent);
+      color: var(--accent-soft);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .metric-card {
+      background: var(--surface-2);
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .metric-label { color: var(--text-low); font-size: 0.8rem; margin-bottom: 6px; }
+    .metric-val { font-size: 1.1rem; font-weight: 700; }
+
+    .chart-wrap {
+      margin-top: 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 35%), var(--surface-2);
+      padding: 14px;
+    }
+
+    .chart-placeholder {
+      height: 250px;
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+    }
+
+    .news-item {
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
+      transition: transform 0.2s;
+    }
+
+    .news-item:hover { transform: translateX(5px); }
+    .news-tag { color: var(--accent-soft); font-size: 0.72rem; font-weight: 800; }
+
+    .action-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .buy-action {
+      background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+      color: #fff;
+      box-shadow: 0 16px 40px var(--glow);
+    }
+
+    .section-title {
+      margin-bottom: 20px;
+      font-weight: 800;
+      border-left: 3px solid var(--accent);
+      padding-left: 15px;
+    }
+
+    .recommendation-wrap {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .signal-copy h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.4rem;
+    }
+
+    .signal-copy p {
+      margin: 0;
+      color: var(--text-low);
+      line-height: 1.65;
+    }
+
+    .signal-scale {
+      position: relative;
+      margin-top: 18px;
+      padding-top: 24px;
+    }
+
+    .signal-bar {
+      height: 16px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--down-red) 0 33.33%, var(--hold-yellow) 33.33% 66.66%, var(--up-green) 66.66% 100%);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+
+    .signal-marker {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: left 0.35s ease;
+    }
+
+    .signal-marker .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 4px solid var(--accent-soft);
+      box-shadow: 0 0 0 6px var(--glow);
+    }
+
+    .signal-marker .stem {
+      width: 2px;
+      height: 26px;
+      background: var(--accent-soft);
+      opacity: 0.9;
+    }
+
+    .signal-badges {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .sell { color: var(--down-red); }
+    .hold { color: var(--hold-yellow); }
+    .buy { color: var(--up-green); }
+
+    .ai-chip,
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      color: var(--accent-soft);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    @media (max-width: 1100px) {
+      .main-ticker, .sidebar, .full-width { grid-column: span 12; }
+      .recommendation-wrap { grid-template-columns: 1fr; }
+      .nav-glass { flex-wrap: wrap; }
+      .search-box { width: 100%; }
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 18px; }
+      .price-hero { font-size: 3rem; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .nav-right { width: 100%; justify-content: space-between; }
+    }
+  </style>
 </head>
 <body>
+  <nav class="nav-glass">
+    <div class="brand">ST<span>AK</span></div>
+    <div class="search-box">
+      <input type="text" id="ticker" placeholder="ENTER SYMBOL (AAPL, TSLA, MSFT, NVDA)..." autocomplete="off" />
+      <button id="loadBtn" class="primary-btn">Load</button>
+    </div>
+    <div class="nav-right">
+      <div style="color: var(--text-low); font-size: 0.9rem;">Live AI Terminal</div>
+      <button id="modeToggle" class="mode-btn">☾ Night Mode</button>
+    </div>
+  </nav>
 
-    <div class="header">
-        <h1>Market Insights</h1>
-        <p style="color: var(--text-muted);">In-depth analysis, real-time data, and macro trends.</p>
+  <div class="quick-note">
+    Users only need to enter a ticker. This frontend is now designed to call a single backend endpoint that returns all market data, news, chart history, and AI positioning in one response.
+  </div>
+
+  <div class="grid">
+    <div class="panel main-ticker">
+      <div class="badge" id="marketBadge">Awaiting Data</div>
+      <h1 id="nameDisplay" style="margin: 10px 0 0 0;">SELECT A TICKER</h1>
+      <div class="price-hero" id="priceDisplay">$0.00</div>
+      <div class="subline">
+        <div id="changeDisplay" style="color: var(--up-green); font-weight: 800;">+0.00% (+$0.00) ▲</div>
+        <div class="status-chip" id="providerStatus">Ready</div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="priceChart" class="chart-placeholder"></canvas>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-label">MARKET CAP</div>
+          <div class="metric-val" id="mktCap">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">OPEN / PREV CLOSE</div>
+          <div class="metric-val" id="openPrev">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">DAY RANGE</div>
+          <div class="metric-val" id="dayRange">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">AI CONFIDENCE</div>
+          <div class="metric-val" id="aiConfidence">—</div>
+        </div>
+      </div>
     </div>
 
-    <div class="search-container">
-        <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g., AAPL, BTC)" onkeydown="if(event.key === 'Enter') fetchDashboardData()">
-        <button onclick="fetchDashboardData()">Analyze</button>
+    <div class="panel sidebar">
+      <div class="card-title" style="color: var(--text-low); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Consensus Rating</div>
+      <div id="consensusText" style="font-size: 2.5rem; font-weight: 800; color: var(--accent-soft); margin: 10px 0;">WAITING</div>
+      <p id="summaryText" style="color: var(--text-low); font-size: 0.95rem; line-height: 1.7;">
+        Enter a ticker and STAK will load the live market snapshot.
+      </p>
+      <button class="action-btn buy-action" id="refreshBtn">Refresh Data</button>
+
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 30px 0;" />
+
+      <div class="metric-row" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <span style="color: var(--text-low);">TICKER</span>
+        <span id="tickerEcho">—</span>
+      </div>
+      <div class="metric-row" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <span style="color: var(--text-low);">EXCHANGE</span>
+        <span id="exchangeDisplay">—</span>
+      </div>
+      <div class="metric-row" style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-low);">LAST UPDATED</span>
+        <span id="updatedAt">—</span>
+      </div>
     </div>
 
-    <div id="loader" class="loader">Fetching real-time market data...</div>
-
-    <div id="dashboard" class="dashboard">
-        <div class="card">
-            <div class="card-title" id="tickerDisplay">Ticker Info</div>
-            <div class="price-large" id="currentPrice">--</div>
-            <div style="color: var(--rh-blue); font-weight: bold;" id="priceChange">--</div>
-            <div class="recommendation" id="analystRec">--</div>
+    <div class="panel full-width">
+      <div class="section-title">LIVE INTELLIGENCE FEED</div>
+      <div id="newsList">
+        <div class="news-item" style="border-bottom: 0; padding-bottom: 0;">
+          <span class="news-tag">READY</span>
+          <div style="font-weight: 700; margin: 5px 0;">Load a symbol to pull recent company headlines.</div>
+          <div style="color: var(--text-low); font-size: 0.75rem;">Unified backend feed</div>
         </div>
-
-        <div class="card">
-            <div class="card-title">Key Metrics</div>
-            <div class="metric-row"><span>Market Cap</span><span class="metric-value" id="marketCap">--</span></div>
-            <div class="metric-row"><span>P/E Ratio</span><span class="metric-value" id="peRatio">--</span></div>
-            <div class="metric-row"><span>52 Week High</span><span class="metric-value" id="high52">--</span></div>
-            <div class="metric-row"><span>52 Week Low</span><span class="metric-value" id="low52">--</span></div>
-            <div class="metric-row"><span>Volume</span><span class="metric-value" id="volume">--</span></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Macroeconomic Context</div>
-            <div class="metric-row"><span>Fed Funds Rate</span><span class="metric-value" id="fedRate">--</span></div>
-            <div class="metric-row"><span>Inflation (CPI)</span><span class="metric-value" id="cpi">--</span></div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 15px;">
-                Higher rates generally compress tech/growth valuations while boosting financial sector margins.
-            </p>
-        </div>
-
-        <div class="card col-span-1">
-            <div class="card-title">Latest Earnings</div>
-            <div class="metric-row"><span>Report Date</span><span class="metric-value" id="earningsDate">--</span></div>
-            <div class="metric-row"><span>EPS (Estimate)</span><span class="metric-value" id="epsEst">--</span></div>
-            <div class="metric-row"><span>EPS (Actual)</span><span class="metric-value" id="epsAct">--</span></div>
-            <div class="metric-row"><span>Revenue</span><span class="metric-value" id="revenue">--</span></div>
-            <div style="margin-top: 10px; color: #00D1FF; font-weight: bold;" id="earningsBeat"></div>
-        </div>
-
-        <div class="card col-span-2">
-            <div class="card-title">Real-Time News</div>
-            <div id="newsFeed">
-                </div>
-        </div>
+      </div>
     </div>
 
-    <script>
-        // JavaScript: Application Logic
-        function fetchDashboardData() {
-            const ticker = document.getElementById('tickerInput').value.toUpperCase();
-            if(!ticker) {
-                alert("Please enter a valid ticker symbol.");
-                return;
-            }
+    <div class="panel full-width">
+      <div class="section-title">AI BUY / SELL / HOLD POSITIONING</div>
+      <div class="recommendation-wrap">
+        <div class="signal-copy">
+          <h3 id="signalHeadline">AI intelligence currently leans <span style="color: var(--hold-yellow);">Hold</span></h3>
+          <p id="signalBody">
+            STAK blends price momentum, intraday move, and recent trend into a single recommendation band. Once data is loaded, the recommendation meter updates automatically.
+          </p>
+          <div class="ai-chip" id="aiChip">AI Placement • Waiting for data</div>
+        </div>
 
-            // UI Transitions
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
+        <div class="signal-scale">
+          <div class="signal-marker" id="signalMarker" aria-label="AI recommendation marker">
+            <div class="dot"></div>
+            <div class="stem"></div>
+          </div>
+          <div class="signal-bar"></div>
+          <div class="signal-badges">
+            <span class="sell">SELL</span>
+            <span class="hold">HOLD</span>
+            <span class="buy">BUY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            /* * PM NOTE: 
-             * In production, this setTimeout simulates the latency of calling your 
-             * backend aggregators (e.g. Finnhub for stock, FRED for macro).
-             */
-            setTimeout(() => {
-                populateMockData(ticker);
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'grid';
-            }, 800);
-        }
+  <script>
+    const tickerInput = document.getElementById('ticker');
+    const modeToggle = document.getElementById('modeToggle');
+    const body = document.body;
+    const loadBtn = document.getElementById('loadBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const providerStatus = document.getElementById('providerStatus');
+    const chartCanvas = document.getElementById('priceChart');
+    const ctx = chartCanvas.getContext('2d');
 
-        function populateMockData(ticker) {
-            // 1. Header & Price Info
-            document.getElementById('tickerDisplay').innerText = `${ticker} • Equity`;
-            
-            // Randomize mock data for dynamic feel
-            const price = (Math.random() * 500 + 50).toFixed(2);
-            document.getElementById('currentPrice').innerText = `$${price}`;
-            document.getElementById('priceChange').innerText = "+$4.20 (+1.45%) Today";
+    let isLight = false;
+    let currentTicker = '';
 
-            // 2. Analyst Ratings & Recommendation Logic
-            const recEl = document.getElementById('analystRec');
-            const score = Math.random();
-            if (score > 0.66) {
-                recEl.innerText = "STRONG BUY";
-                recEl.className = "recommendation rec-buy";
-            } else if (score > 0.33) {
-                recEl.innerText = "HOLD";
-                recEl.className = "recommendation rec-hold";
-            } else {
-                recEl.innerText = "SELL";
-                recEl.className = "recommendation rec-sell";
-            }
+    modeToggle.addEventListener('click', () => {
+      isLight = !isLight;
+      body.classList.toggle('light', isLight);
+      modeToggle.textContent = isLight ? '☀ Day Mode' : '☾ Night Mode';
+      drawChart(window.__lastChartData || []);
+    });
 
-            // 3. Key Metrics
-            document.getElementById('marketCap').innerText = `$${(Math.random() * 2 + 1).toFixed(2)}T`;
-            document.getElementById('peRatio').innerText = (Math.random() * 40 + 10).toFixed(2);
-            document.getElementById('high52').innerText = `$${(parseFloat(price) * 1.2).toFixed(2)}`;
-            document.getElementById('low52').innerText = `$${(parseFloat(price) * 0.7).toFixed(2)}`;
-            document.getElementById('volume').innerText = `${(Math.random() * 50 + 10).toFixed(1)}M`;
+    tickerInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loadTicker();
+    });
 
-            // 4. Fed & Macro
-            document.getElementById('fedRate').innerText = "5.25% - 5.50%";
-            document.getElementById('cpi').innerText = "3.1%";
+    loadBtn.addEventListener('click', loadTicker);
+    refreshBtn.addEventListener('click', () => currentTicker && loadTicker(currentTicker));
 
-            // 5. Earnings
-            document.getElementById('earningsDate').innerText = "2 Days Ago";
-            document.getElementById('epsEst').innerText = "$1.12";
-            document.getElementById('epsAct').innerText = "$1.24";
-            document.getElementById('revenue').innerText = "$85.2B";
-            document.getElementById('earningsBeat').innerText = "🔥 Beat EPS estimates by 10.7%";
+    function fmtCurrency(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+      const abs = Math.abs(Number(value));
+      if (abs >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+      if (abs >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+      if (abs >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+      return `$${Number(value).toFixed(2)}`;
+    }
 
-            // 6. News Feed
-            const newsFeed = document.getElementById('newsFeed');
-            newsFeed.innerHTML = `
-                <div class="news-item">
-                    <a href="#">${ticker} surges pre-market following strong guidance in latest earnings call</a>
-                    <div class="source">Reuters • 12 mins ago</div>
-                </div>
-                <div class="news-item">
-                    <a href="#">Analyst upgrades ${ticker} price target, citing AI integration and resilient margins</a>
-                    <div class="source">Bloomberg • 1 hour ago</div>
-                </div>
-                <div class="news-item">
-                    <a href="#">How the latest Fed Rate holding pattern affects ${ticker}'s growth trajectory</a>
-                    <div class="source">Wall Street Journal • 3 hours ago</div>
-                </div>
-            `;
-        }
-    </script>
+    function fmtPct(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+      return `${Math.abs(Number(value)).toFixed(2)}%`;
+    }
+
+    function setChange(change, pct) {
+      const el = document.getElementById('changeDisplay');
+      const up = Number(change) >= 0;
+      const sign = up ? '+' : '-';
+      el.style.color = up ? 'var(--up-green)' : 'var(--down-red)';
+      el.textContent = `${sign}${fmtPct(pct)} (${sign}$${Math.abs(Number(change || 0)).toFixed(2)}) ${up ? '▲' : '▼'}`;
+    }
+
+    function updateTime() {
+      document.getElementById('updatedAt').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function scoreSignal(quote) {
+      const pct = Number(quote.dp || 0);
+      const driftFromOpen = quote.o ? ((Number(quote.c) - Number(quote.o)) / Number(quote.o)) * 100 : 0;
+      let score = 50 + pct * 3 + driftFromOpen * 4;
+      score = Math.max(0, Math.min(100, score));
+
+      let label = 'HOLD';
+      let color = 'var(--hold-yellow)';
+      if (score < 33) { label = 'SELL'; color = 'var(--down-red)'; }
+      else if (score > 66) { label = 'BUY'; color = 'var(--up-green)'; }
+
+      document.getElementById('aiConfidence').textContent = `${Math.round(score)} / 100`;
+      document.getElementById('consensusText').textContent = label;
+      document.getElementById('consensusText').style.color = color;
+      document.getElementById('signalHeadline').innerHTML = `AI intelligence currently leans <span style="color: ${color};">${label}</span>`;
+      document.getElementById('signalBody').textContent = `Signal score is driven by current percentage move, change versus the open, and short-term trend. A score of ${Math.round(score)} places this ticker in the ${label.toLowerCase()} zone right now.`;
+      document.getElementById('aiChip').textContent = `AI Placement • ${Math.round(score)} / 100`;
+      document.getElementById('signalMarker').style.left = `${score}%`;
+      return { score, label };
+    }
+
+    function populateNews(items) {
+      const newsList = document.getElementById('newsList');
+      if (!items || !items.length) {
+        newsList.innerHTML = `
+          <div class="news-item" style="border-bottom: 0; padding-bottom: 0;">
+            <span class="news-tag">NO NEWS</span>
+            <div style="font-weight: 700; margin: 5px 0;">No recent headlines were returned for this ticker.</div>
+            <div style="color: var(--text-low); font-size: 0.75rem;">Try another symbol or refresh again.</div>
+          </div>`;
+        return;
+      }
+
+      newsList.innerHTML = items.slice(0, 3).map((item, idx, arr) => `
+        <div class="news-item" style="${idx === arr.length - 1 ? 'border-bottom:0;padding-bottom:0;' : ''}">
+          <span class="news-tag">${item.source || 'NEWS'}</span>
+          <div style="font-weight: 700; margin: 5px 0;">${item.headline || item.title || 'Headline unavailable'}</div>
+          <div style="color: var(--text-low); font-size: 0.75rem;">${item.publishedAt || item.time || 'Recent'}</div>
+        </div>
+      `).join('');
+    }
+
+    function drawChart(data) {
+      const canvas = chartCanvas;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const w = rect.width;
+      const h = rect.height;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border');
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 5; i++) {
+        const y = (h / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      if (!data || data.length < 2) {
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-low');
+        ctx.font = '14px Inter, sans-serif';
+        ctx.fillText('Load a ticker to draw price history', 16, 26);
+        return;
+      }
+
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = Math.max(max - min, 1);
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      const accentSoft = getComputedStyle(document.documentElement).getPropertyValue('--accent-soft').trim();
+      const gradient = ctx.createLinearGradient(0, 0, w, 0);
+      gradient.addColorStop(0, accentSoft);
+      gradient.addColorStop(1, accent);
+
+      ctx.beginPath();
+      data.forEach((value, index) => {
+        const x = (index / (data.length - 1)) * (w - 24) + 12;
+        const y = h - ((value - min) / range) * (h - 32) - 16;
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = accent;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function renderData(symbol, data) {
+      const { quote = {}, profile = {}, news = [], chart = [] } = data;
+      currentTicker = symbol;
+
+      document.getElementById('nameDisplay').textContent = profile.name || profile.ticker || symbol;
+      document.getElementById('tickerEcho').textContent = symbol;
+      document.getElementById('exchangeDisplay').textContent = profile.exchange || '—';
+      document.getElementById('priceDisplay').textContent = fmtCurrency(quote.c);
+      document.getElementById('mktCap').textContent = profile.marketCap ? fmtCurrency(profile.marketCap) : '—';
+      document.getElementById('openPrev').textContent = `${fmtCurrency(quote.o)} / ${fmtCurrency(quote.pc)}`;
+      document.getElementById('dayRange').textContent = `${fmtCurrency(quote.l)} – ${fmtCurrency(quote.h)}`;
+      document.getElementById('summaryText').textContent = `${profile.name || symbol} is trading at ${fmtCurrency(quote.c)} with an intraday move of ${Number(quote.dp || 0).toFixed(2)}%.`;
+      document.getElementById('marketBadge').textContent = Number(quote.dp) >= 0 ? 'Bullish Momentum' : 'Risk-Off Pressure';
+      document.getElementById('providerStatus').textContent = 'Live data loaded';
+      setChange(quote.d, quote.dp);
+      populateNews(news);
+      drawChart(chart);
+      window.__lastChartData = chart;
+      scoreSignal(quote);
+      updateTime();
+    }
+
+    async function loadTicker(forcedTicker) {
+      const symbol = (forcedTicker || tickerInput.value).toUpperCase().trim();
+      if (!symbol) return;
+
+      providerStatus.textContent = 'Loading market data...';
+      document.getElementById('tickerEcho').textContent = symbol;
+
+      try {
+        const response = await fetch(`/api/stak?ticker=${encodeURIComponent(symbol)}`);
+        if (!response.ok) throw new Error('Backend data request failed.');
+        const data = await response.json();
+        renderData(symbol, data);
+      } catch (error) {
+        providerStatus.textContent = 'Load failed';
+        document.getElementById('summaryText').textContent = 'This frontend now expects a backend endpoint at /api/stak that handles all provider keys privately and returns one unified response.';
+        document.getElementById('newsList').innerHTML = `
+          <div class="news-item" style="border-bottom: 0; padding-bottom: 0;">
+            <span class="news-tag">SETUP</span>
+            <div style="font-weight: 700; margin: 5px 0;">Backend endpoint missing</div>
+            <div style="color: var(--text-low); font-size: 0.75rem;">Create /api/stak?ticker=SYMBOL so users only enter the ticker and never see API keys.</div>
+          </div>`;
+        drawChart([]);
+      }
+    }
+
+    drawChart([]);
+  </script>
 </body>
 </html>
