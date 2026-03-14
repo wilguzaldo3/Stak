@@ -46,11 +46,11 @@ export default async function handler(req, res) {
 
     // List of common crypto - if the user types these, we use the Crypto API
     const cryptoMap = {
-        'btc': 'bitcoin',
-        'eth': 'ethereum',
-        'sol': 'solana',
-        'doge': 'dogecoin',
-        'xrp': 'ripple'
+        'btc-usd': 'bitcoin',
+        'eth-usd': 'ethereum',
+        'sol-usd': 'solana',
+        'doge-usd': 'dogecoin',
+        'xrp-usd': 'ripple'
     };
 
     try {
