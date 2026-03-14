@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
     const { ticker } = req.query;
-    const key = process.env.RAPIDAPI_KEY;
-    const host = process.env.RAPIDAPI_HOST; // yahoo-finance-real-time1.p.rapidapi.com
+    const key = "da4fdcff9fmshd54478025b5dd31p1a83bcjsn6a6a1aad68f8"; // Your provided key
+    const host = "yahoo-finance-real-time1.p.rapidapi.com";
     const symbol = ticker ? ticker.toUpperCase().trim() : '';
 
     if (!symbol) return res.status(400).json({ error: "No ticker provided" });
@@ -10,23 +10,27 @@ export default async function handler(req, res) {
         method: 'GET',
         headers: {
             'x-rapidapi-key': key,
-            'x-rapidapi-host': host,
-            'Content-Type': 'application/json'
+            'x-rapidapi-host': host
         }
     };
 
     try {
-        // 1. Fetch Real-Time Quote & Profile
+        // 1. Fetch Price/Quote
         const quoteRes = await fetch(`https://${host}/stock/get-price?symbol=${symbol}&region=US`, options);
         const quoteData = await quoteRes.json();
-        const priceObj = quoteData.body?.price || {};
+        
+        // Data path for this specific API: body.price
+        const p = quoteData.body?.price || {};
 
-        // 2. Fetch News from your specific provider
+        // 2. Fetch News
         const newsRes = await fetch(`https://${host}/stock/get-news?symbol=${symbol}&region=US`, options);
         const newsData = await newsRes.json();
+        
+        // Data path for this specific API: body (it's an array)
+        const rawNews = Array.isArray(newsData.body) ? newsData.body : [];
 
-        // 3. Create Chart Data (Mocking 30 days based on the live price)
-        const priceRaw = priceObj.regularMarketPrice?.raw || 0;
+        // 3. Create Mock Chart Data (30 days)
+        const priceRaw = p.regularMarketPrice?.raw || 0;
         const chartData = [];
         const now = Math.floor(Date.now() / 1000);
         for (let i = 30; i >= 0; i--) {
@@ -39,26 +43,22 @@ export default async function handler(req, res) {
             });
         }
 
-        // 4. Send the unified response
+        // 4. Send the cleaned data back to the frontend
         res.status(200).json({
-            price: priceObj.regularMarketPrice?.fmt || "$0.00",
-            change: priceObj.regularMarketChangePercent?.fmt || "0.00%",
-            name: priceObj.longName || symbol,
-            exchange: priceObj.exchangeName || "Exchange",
-            marketCap: priceObj.marketCap?.fmt || "N/A",
-            // Mapping the news from this provider's format
-            news: (newsData.body || []).slice(0, 5).map(item => ({
-                content: {
-                    title: item.title,
-                    provider: { displayName: item.source },
-                    clickThroughUrl: { url: item.link }
-                }
+            price: p.regularMarketPrice?.fmt || "$0.00",
+            change: p.regularMarketChangePercent?.fmt || "0.00%",
+            name: p.longName || symbol,
+            exchange: p.exchangeName || "Exchange",
+            marketCap: p.marketCap?.fmt || "N/A",
+            news: rawNews.slice(0, 5).map(item => ({
+                title: item.title,
+                source: item.source,
+                link: item.link
             })),
             chart: chartData 
         });
 
     } catch (error) {
-        console.error("API Error:", error);
-        res.status(500).json({ error: "Provider Connection Failed" });
+        res.status(500).json({ error: "API Connection Failed" });
     }
 }
