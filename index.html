@@ -218,9 +218,25 @@
       height: 400px;
       position: relative;
       overflow: hidden;
+      cursor: crosshair; /* Added cursor */
     }
 
-    canvas { width: 100%; height: 100%; }
+    canvas { width: 100%; height: 100%; display: block; }
+
+    /* Price Tag for Crosshair */
+    #chartOverlay {
+      position: absolute;
+      background: var(--accent-blue);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      pointer-events: none;
+      display: none;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
 
     /* --- NEWS ITEMS --- */
     .news-item {
@@ -302,7 +318,8 @@
         </div>
       </div>
 
-      <div class="chart-box">
+      <div class="chart-box" id="chartBox">
+        <div id="chartOverlay"></div>
         <canvas id="mainChart"></canvas>
       </div>
     </div>
@@ -319,7 +336,10 @@
 
   <script>
     // --- APP LOGIC ---
+    let activeChartData = []; // Store data for hover interaction
     const input = document.getElementById('tickerInput');
+    const chartBox = document.getElementById('chartBox');
+    const overlay = document.getElementById('chartOverlay');
     
     input.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') loadData(input.value.toUpperCase().trim());
@@ -346,10 +366,9 @@
         document.getElementById('mktCap').textContent = `$${(data.profile.marketCap / 1e9).toFixed(2)}B`;
         document.getElementById('exchangeDisplay').textContent = data.profile.exchange;
 
-        // 3. AI Intelligence Logic (Buy / Hold / Sell)
-        // Base score starts at 50, adjusts by price performance
+        // 3. AI Intelligence Logic
         let score = 50 + (pct * 8); 
-        score = Math.max(5, Math.min(95, score)); // Clamp between 5 and 95
+        score = Math.max(5, Math.min(95, score));
 
         const meter = document.getElementById('sentimentMeter');
         const valText = document.getElementById('sentimentValue');
@@ -386,47 +405,114 @@
         `).join('');
 
         // 5. Charting
-        drawProChart(data.chart.map(c => c.close));
+        activeChartData = data.chart.map(c => c.close);
+        drawProChart(activeChartData);
 
       } catch (err) {
         console.error("Terminal Failure:", err);
       }
     }
 
-    function drawProChart(points) {
+    function drawProChart(points, mouseX = null) {
       const canvas = document.getElementById('mainChart');
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
       
-      canvas.width = canvas.offsetWidth * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
       ctx.scale(dpr, dpr);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, w, h);
+      if (points.length < 2) return;
+
+      const max = Math.max(...points);
+      const min = Math.min(...points);
+      const range = max - min || 1;
+      const padding = 20;
+
+      const getX = (i) => (i / (points.length - 1)) * w;
+      const getY = (p) => h - padding - ((p - min) / range) * (h - padding * 2);
+
+      // Gradient Fill
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+      grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
       
-      // Glow Effect
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(getX(i), h);
+        ctx.lineTo(getX(i), getY(p));
+      });
+      ctx.lineTo(w, h);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Glow Effect & Line
       ctx.shadowBlur = 15;
       ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
-      
       ctx.beginPath();
       ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 3;
       ctx.lineJoin = 'round';
 
-      const max = Math.max(...points);
-      const min = Math.min(...points);
-      const range = max - min;
-      const w = canvas.offsetWidth;
-      const h = canvas.offsetHeight;
-
       points.forEach((p, i) => {
-        const x = (i / (points.length - 1)) * w;
-        const y = h - ((p - min) / range) * h;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        if (i === 0) ctx.moveTo(getX(i), getY(p)); else ctx.lineTo(getX(i), getY(p));
       });
-
       ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Crosshair Logic
+      if (mouseX !== null) {
+        const index = Math.round((mouseX / w) * (points.length - 1));
+        const p = points[index];
+        const x = getX(index);
+        const y = getY(p);
+
+        // Lines
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Active Dot
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#fff';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Overlay Tooltip
+        overlay.style.display = 'block';
+        overlay.style.left = `${x + 10}px`;
+        overlay.style.top = `${y - 30}px`;
+        overlay.textContent = `$${p.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+      } else {
+        overlay.style.display = 'none';
+      }
     }
+
+    // Interaction Listeners
+    chartBox.addEventListener('mousemove', (e) => {
+      if (!activeChartData.length) return;
+      const rect = chartBox.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      drawProChart(activeChartData, x);
+    });
+
+    chartBox.addEventListener('mouseleave', () => {
+      if (!activeChartData.length) return;
+      drawProChart(activeChartData);
+    });
+
+    window.addEventListener('resize', () => {
+      if (activeChartData.length) drawProChart(activeChartData);
+    });
   </script>
 </body>
 </html>
