@@ -1,64 +1,63 @@
 export default async function handler(req, res) {
     const { ticker } = req.query;
-    const key = "da4fdcff9fmshd54478025b5dd31p1a83bcjsn6a6a1aad68f8"; // Your provided key
-    const host = "yahoo-finance-real-time1.p.rapidapi.com";
+    const token = process.env.FINNHUB_KEY;
     const symbol = ticker ? ticker.toUpperCase().trim() : '';
 
     if (!symbol) return res.status(400).json({ error: "No ticker provided" });
 
-    const options = {
-        method: 'GET',
-        headers: {
-            'x-rapidapi-key': key,
-            'x-rapidapi-host': host
-        }
-    };
+    // Identify Asset Class
+    const cryptoList = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'LTC'];
+    const isCrypto = cryptoList.includes(symbol);
+    const finnhubSymbol = isCrypto ? `BINANCE:${symbol}USDT` : symbol;
+    const category = isCrypto ? 'crypto' : 'stock';
 
     try {
-        // 1. Fetch Price/Quote
-        const quoteRes = await fetch(`https://${host}/stock/get-price?symbol=${symbol}&region=US`, options);
-        const quoteData = await quoteRes.json();
-        
-        // Data path for this specific API: body.price
-        const p = quoteData.body?.price || {};
+        // 1. Fetch Current Quote
+        const quoteRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${finnhubSymbol}&token=${token}`);
+        const quote = await quoteRes.json();
 
-        // 2. Fetch News
-        const newsRes = await fetch(`https://${host}/stock/get-news?symbol=${symbol}&region=US`, options);
-        const newsData = await newsRes.json();
-        
-        // Data path for this specific API: body (it's an array)
-        const rawNews = Array.isArray(newsData.body) ? newsData.body : [];
+        // 2. Fetch Candlesticks (Last 30 days)
+        const end = Math.floor(Date.now() / 1000);
+        const start = end - (30 * 24 * 60 * 60);
+        const candleRes = await fetch(`https://finnhub.io/api/v1/${category}/candle?symbol=${finnhubSymbol}&resolution=D&from=${start}&to=${end}&token=${token}`);
+        const candles = await candleRes.json();
 
-        // 3. Create Mock Chart Data (30 days)
-        const priceRaw = p.regularMarketPrice?.raw || 0;
-        const chartData = [];
-        const now = Math.floor(Date.now() / 1000);
-        for (let i = 30; i >= 0; i--) {
-            chartData.push({
-                time: now - (i * 86400),
-                open: priceRaw * (0.99 + Math.random() * 0.02),
-                high: priceRaw * 1.01,
-                low: priceRaw * 0.99,
-                close: priceRaw * (0.99 + Math.random() * 0.02)
-            });
+        // 3. Fetch Profile
+        let profile = { name: symbol, exchange: isCrypto ? "Crypto Market" : "US Exchange", marketCapitalization: 0 };
+        if (!isCrypto) {
+            const profileRes = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${token}`);
+            profile = await profileRes.json();
         }
 
-        // 4. Send the cleaned data back to the frontend
+        // 4. Fetch News
+        const newsRes = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${symbol}&from=2025-01-01&to=2026-03-15&token=${token}`);
+        const news = await newsRes.json();
+
+        // 5. Format Candles
+        let formattedChart = [];
+        if (candles.s === "ok") {
+            formattedChart = candles.t.map((t, i) => ({
+                time: t,
+                open: candles.o[i],
+                high: candles.h[i],
+                low: candles.l[i],
+                close: candles.c[i]
+            }));
+        }
+
         res.status(200).json({
-            price: p.regularMarketPrice?.fmt || "$0.00",
-            change: p.regularMarketChangePercent?.fmt || "0.00%",
-            name: p.longName || symbol,
-            exchange: p.exchangeName || "Exchange",
-            marketCap: p.marketCap?.fmt || "N/A",
-            news: rawNews.slice(0, 5).map(item => ({
-                title: item.title,
-                source: item.source,
-                link: item.link
-            })),
-            chart: chartData 
+            quote: quote,
+            profile: {
+                name: profile.name || symbol,
+                ticker: symbol,
+                exchange: profile.exchange || "Exchange",
+                marketCap: (profile.marketCapitalization || 0) * 1000000
+            },
+            news: news.slice(0, 5),
+            chart: formattedChart
         });
 
     } catch (error) {
-        res.status(500).json({ error: "API Connection Failed" });
+        res.status(500).json({ error: "Terminal Backend Error" });
     }
 }
