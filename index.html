@@ -664,32 +664,49 @@
  let chartInstance = null;
 let candleSeries = null;
 
+let chartInstance = null;
+let candleSeries = null;
+
 function drawCandlestickChart(data) {
-    const chartContainer = document.getElementById('chartContainer'); // Ensure you have a <div id="chartContainer"></div>
-    
-    // 1. Clear old chart so they don't stack
+    const container = document.getElementById('chartContainer');
+    if (!container) return;
+
+    // 1. Wipe the old chart if it exists
     if (chartInstance) {
         chartInstance.remove();
+        chartInstance = null;
     }
 
-    // 2. Create the Chart
-    chartInstance = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
+    // 2. Create a fresh chart
+    chartInstance = LightweightCharts.createChart(container, {
+        width: container.offsetWidth,
         height: 400,
-        layout: { background: { color: '#000000' }, textColor: '#DDD' },
-        grid: { vertLines: { color: '#222' }, horzLines: { color: '#222' } },
+        layout: { 
+            background: { color: '#000000' }, 
+            textColor: '#DDD' 
+        },
+        grid: { 
+            vertLines: { color: '#111' }, 
+            horzLines: { color: '#111' } 
+        }
     });
 
-    // 3. Add the Candlestick style
+    // 3. Add the Candlestick Series
     candleSeries = chartInstance.addCandlestickSeries({
-        upColor: '#26a69a', downColor: '#ef5350',
+        upColor: '#26a69a', 
+        downColor: '#ef5350',
         borderVisible: false,
-        wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+        wickUpColor: '#26a69a', 
+        wickDownColor: '#ef5350',
     });
 
-    // 4. Plug in the data
-    candleSeries.setData(data);
+    // 4. SORT THE DATA (Crucial: Finnhub sometimes sends it backwards)
+    const sortedData = data.sort((a, b) => a.time - b.time);
+
+    // 5. Set the data and fit it to the screen
+    candleSeries.setData(sortedData);
     chartInstance.timeScale().fitContent();
+}
 }
   </script>
 </body>
