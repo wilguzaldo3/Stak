@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script> <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAK | Stock Trading Analyzer Knowledge</title>
@@ -660,7 +660,36 @@
       }
     }
 
-    drawChart([]);
+ let chartInstance = null;
+let candleSeries = null;
+
+function drawCandlestickChart(data) {
+    const chartContainer = document.getElementById('chartContainer'); // Ensure you have a <div id="chartContainer"></div>
+    
+    // 1. Clear old chart so they don't stack
+    if (chartInstance) {
+        chartInstance.remove();
+    }
+
+    // 2. Create the Chart
+    chartInstance = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: 400,
+        layout: { background: { color: '#000000' }, textColor: '#DDD' },
+        grid: { vertLines: { color: '#222' }, horzLines: { color: '#222' } },
+    });
+
+    // 3. Add the Candlestick style
+    candleSeries = chartInstance.addCandlestickSeries({
+        upColor: '#26a69a', downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+    });
+
+    // 4. Plug in the data
+    candleSeries.setData(data);
+    chartInstance.timeScale().fitContent();
+}
   </script>
 </body>
 </html>
