@@ -6,7 +6,7 @@
   <title>STAK | Professional Market Terminal</title>
   <style>
     /* STAK PRO TERMINAL - ELECTRIC BLUE THEME
-       VERSION: 2.1.0 
+       VERSION: 2.2.0 
     */
     :root {
       --bg-dark: #05070a;
@@ -246,6 +246,13 @@
       line-height: 1.5;
       color: var(--text-primary);
     }
+    
+    #ratingLabel {
+      font-size: 0.8rem;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -285,7 +292,10 @@
         </div>
         <div class="card">
           <div class="card-label">Intelligence Score</div>
-          <div id="sentimentValue" class="card-value">Neutral</div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+             <div id="sentimentValue" class="card-value">Neutral</div>
+             <div id="ratingLabel" style="background: var(--meter-bg); color: var(--text-secondary);">WAITING</div>
+          </div>
           <div class="meter-container">
             <div id="sentimentMeter" class="meter-bar" style="width: 50%;"></div>
           </div>
@@ -336,10 +346,33 @@
         document.getElementById('mktCap').textContent = `$${(data.profile.marketCap / 1e9).toFixed(2)}B`;
         document.getElementById('exchangeDisplay').textContent = data.profile.exchange;
 
-        // 3. AI Sentiment Meter (Randomized for this demo, usually from backend)
-        const score = 40 + (Math.random() * 40);
-        document.getElementById('sentimentMeter').style.width = `${score}%`;
-        document.getElementById('sentimentValue').textContent = score > 60 ? 'Bullish' : (score < 40 ? 'Bearish' : 'Neutral');
+        // 3. AI Intelligence Logic (Buy / Hold / Sell)
+        // Base score starts at 50, adjusts by price performance
+        let score = 50 + (pct * 8); 
+        score = Math.max(5, Math.min(95, score)); // Clamp between 5 and 95
+
+        const meter = document.getElementById('sentimentMeter');
+        const valText = document.getElementById('sentimentValue');
+        const label = document.getElementById('ratingLabel');
+
+        meter.style.width = `${score}%`;
+
+        if (score >= 65) {
+          valText.textContent = "Bullish Outlook";
+          label.textContent = "BUY";
+          label.style.background = "var(--up-green)";
+          label.style.color = "#000";
+        } else if (score > 35 && score < 65) {
+          valText.textContent = "Neutral";
+          label.textContent = "HOLD";
+          label.style.background = "var(--accent-blue)";
+          label.style.color = "#fff";
+        } else {
+          valText.textContent = "Bearish Signal";
+          label.textContent = "SELL";
+          label.style.background = "var(--down-red)";
+          label.style.color = "#fff";
+        }
 
         // 4. News Feed
         document.getElementById('newsList').innerHTML = data.news.map(n => `
