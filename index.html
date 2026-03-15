@@ -3,271 +3,397 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STAK | Midnight Pro</title>
+  <title>STAK | Professional Market Terminal</title>
   <style>
+    /* STAK PRO TERMINAL - ELECTRIC BLUE THEME
+       VERSION: 2.1.0 
+    */
     :root {
-      --bg-deep: #02040a;
-      --panel-bg: rgba(13, 17, 23, 0.8);
-      --neon-blue: #0088ff;
+      --bg-dark: #05070a;
+      --panel-bg: rgba(13, 17, 23, 0.7);
+      --accent-blue: #3b82f6;
       --electric-cyan: #00f2ff;
-      --text-main: #e6edf3;
-      --text-dim: #8b949e;
-      --up-green: #00ffa3;
-      --down-red: #ff3366;
-      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --border-color: rgba(56, 139, 253, 0.15);
+      --up-green: #23d33a;
+      --down-red: #f85149;
+      --meter-bg: #161b22;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      background: var(--bg-deep);
-      color: var(--text-main);
-      font-family: 'Inter', -apple-system, sans-serif;
-      margin: 0;
+      background-color: var(--bg-dark);
+      background-image: radial-gradient(circle at 50% -20%, #111827, var(--bg-dark));
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-    }
-
-    /* Glassmorphism Header */
-    nav {
-      background: var(--panel-bg);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--glass-border);
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 100;
-    }
-
-    .logo {
-      font-weight: 800;
-      font-size: 1.4rem;
-      background: linear-gradient(90deg, var(--neon-blue), var(--electric-cyan));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -1px;
-    }
-
-    .search-group {
-      display: flex;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      padding: 4px;
-    }
-
-    input {
-      background: transparent;
-      border: none;
-      color: white;
-      padding: 8px 12px;
-      outline: none;
-      width: 180px;
-    }
-
-    button {
-      background: var(--neon-blue);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 18px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover { background: var(--electric-cyan); color: black; }
-
-    main {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 20px;
-      padding: 20px;
-      flex-grow: 1;
       overflow: hidden;
     }
 
-    .glass-panel {
+    /* --- TOP NAVIGATION --- */
+    nav {
+      height: 64px;
+      padding: 0 24px;
       background: var(--panel-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--electric-cyan));
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+
+    .logo-text {
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+    }
+
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-container input {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 100px;
+      color: white;
+      padding: 10px 20px;
+      width: 320px;
+      font-size: 0.9rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .search-container input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+      width: 380px;
+    }
+
+    /* --- DASHBOARD GRID --- */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1px;
+      background: var(--border-color);
+      overflow: hidden;
+    }
+
+    .viewport {
+      background: var(--bg-dark);
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar {
+      background: var(--bg-dark);
       padding: 24px;
       display: flex;
       flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
     }
 
-    .price-hero {
-      font-size: 4.5rem;
+    /* --- COMPONENTS --- */
+    .hero-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .ticker-info h1 {
+      font-size: 2.5rem;
       font-weight: 800;
-      letter-spacing: -2px;
-      margin: 10px 0;
-      text-shadow: 0 0 30px rgba(0, 136, 255, 0.3);
+      letter-spacing: -1px;
     }
 
+    .ticker-info p {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .price-display {
+      text-align: right;
+    }
+
+    .current-price {
+      font-size: 3.5rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .price-change {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    /* --- METRICS GRID --- */
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin: 25px 0;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
     }
 
-    .metric-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--glass-border);
-      padding: 15px;
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
+      padding: 20px;
     }
 
-    .metric-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; }
-    .metric-value { font-size: 1.1rem; font-weight: 600; margin-top: 5px; }
+    .card-label {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
 
-    #chartContainer {
-      flex-grow: 1;
-      margin-top: 20px;
-      min-height: 300px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 12px;
+    .card-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    /* --- POSITIONING METER --- */
+    .meter-container {
+      margin-top: 12px;
+      height: 8px;
+      background: var(--meter-bg);
+      border-radius: 4px;
+      overflow: hidden;
       position: relative;
+    }
+
+    .meter-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--down-red), #eab308, var(--up-green));
+      transition: width 1s ease-in-out;
+    }
+
+    .meter-marker {
+      position: absolute;
+      top: -4px;
+      width: 4px;
+      height: 16px;
+      background: white;
+      box-shadow: 0 0 10px white;
+      transform: translateX(-50%);
+    }
+
+    /* --- CHART AREA --- */
+    .chart-box {
+      background: #000;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      height: 400px;
+      position: relative;
+      overflow: hidden;
     }
 
     canvas { width: 100%; height: 100%; }
 
-    /* News Feed Styling */
-    .news-scroll { overflow-y: auto; flex-grow: 1; }
-    .news-card {
+    /* --- NEWS ITEMS --- */
+    .news-item {
       padding: 16px 0;
-      border-bottom: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--border-color);
     }
-    .news-card:last-child { border: none; }
-    .source-tag {
-      color: var(--electric-cyan);
+
+    .news-item:last-child { border: none; }
+
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
       font-size: 0.7rem;
+      color: var(--accent-blue);
       font-weight: 700;
       text-transform: uppercase;
+      margin-bottom: 8px;
     }
-    .headline { font-size: 1rem; font-weight: 500; margin-top: 6px; line-height: 1.4; }
 
+    .news-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
   </style>
 </head>
 <body>
 
   <nav>
-    <div class="logo">STAK PRO</div>
-    <div class="search-group">
-      <input type="text" id="tickerInput" placeholder="Enter Symbol..." value="BTC">
-      <button onclick="loadTicker()">ANALYZE</button>
+    <div class="brand">
+      <div class="logo-icon"></div>
+      <div class="logo-text">STAK ANALYZER</div>
     </div>
+    <div class="search-container">
+      <input type="text" id="tickerInput" placeholder="Enter Ticker or Asset Name..." spellcheck="false">
+    </div>
+    <div style="font-size: 0.8rem; font-weight: 600; color: var(--accent-blue);">SYSTEM: ONLINE</div>
   </nav>
 
   <main>
-    <section class="glass-panel">
-      <div id="nameDisplay" style="color: var(--text-dim); font-weight: 600;">MARKET OVERVIEW</div>
-      <div id="priceDisplay" class="price-hero">$0.00</div>
-      <div id="changeDisplay" style="font-size: 1.2rem; font-weight: 700;">0.00%</div>
+    <div class="viewport">
+      <div class="hero-stat">
+        <div class="ticker-info">
+          <h1 id="tickerEcho">STAK</h1>
+          <p id="nameDisplay">PRO TERMINAL READY</p>
+        </div>
+        <div class="price-display">
+          <div id="priceDisplay" class="current-price">$0.00</div>
+          <div id="changeDisplay" class="price-change">0.00%</div>
+        </div>
+      </div>
 
       <div class="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-label">Exchange</div>
-          <div id="exchangeDisplay" class="metric-value">---</div>
+        <div class="card">
+          <div class="card-label">Market Capitalization</div>
+          <div id="mktCap" class="card-value">---</div>
         </div>
-        <div class="metric-card">
-          <div class="metric-label">Market Cap</div>
-          <div id="mktCap" class="metric-value">---</div>
+        <div class="card">
+          <div class="card-label">Exchange / Market</div>
+          <div id="exchangeDisplay" class="card-value">---</div>
         </div>
-        <div class="metric-card">
-          <div class="metric-label">Status</div>
-          <div id="providerStatus" class="metric-value" style="color: var(--electric-cyan);">IDLE</div>
+        <div class="card">
+          <div class="card-label">Intelligence Score</div>
+          <div id="sentimentValue" class="card-value">Neutral</div>
+          <div class="meter-container">
+            <div id="sentimentMeter" class="meter-bar" style="width: 50%;"></div>
+          </div>
         </div>
       </div>
 
-      <div id="chartContainer">
-        <canvas id="marketChart"></canvas>
+      <div class="chart-box">
+        <canvas id="mainChart"></canvas>
       </div>
-    </section>
+    </div>
 
-    <aside class="glass-panel">
-      <h3 style="margin-top: 0; color: var(--text-dim);">TERMINAL FEED</h3>
-      <div id="newsList" class="news-scroll">
+    <div class="sidebar">
+      <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="card-label">Intelligence Feed</div>
+        <div id="newsList" style="flex: 1; overflow-y: auto;">
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Waiting for terminal input...</p>
         </div>
-    </aside>
+      </div>
+    </div>
   </main>
 
   <script>
-    async function loadTicker() {
-      const ticker = document.getElementById('tickerInput').value.toUpperCase().trim();
+    // --- APP LOGIC ---
+    const input = document.getElementById('tickerInput');
+    
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loadData(input.value.toUpperCase().trim());
+    });
+
+    async function loadData(ticker) {
       if (!ticker) return;
-
-      document.getElementById('providerStatus').textContent = 'SYNCING';
-
+      
       try {
-        const res = await fetch(`/api/stak?ticker=${ticker}`);
-        const data = await res.json();
-        renderDashboard(ticker, data);
+        const response = await fetch(`/api/stak?ticker=${ticker}`);
+        const data = await response.json();
+        
+        // 1. Update Core UI
+        document.getElementById('tickerEcho').textContent = ticker;
+        document.getElementById('nameDisplay').textContent = data.profile.name;
+        document.getElementById('priceDisplay').textContent = `$${data.quote.c.toLocaleString()}`;
+        
+        const pct = data.quote.dp;
+        const changeEl = document.getElementById('changeDisplay');
+        changeEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+        changeEl.style.color = pct >= 0 ? 'var(--up-green)' : 'var(--down-red)';
+
+        // 2. Metrics
+        document.getElementById('mktCap').textContent = `$${(data.profile.marketCap / 1e9).toFixed(2)}B`;
+        document.getElementById('exchangeDisplay').textContent = data.profile.exchange;
+
+        // 3. AI Sentiment Meter (Randomized for this demo, usually from backend)
+        const score = 40 + (Math.random() * 40);
+        document.getElementById('sentimentMeter').style.width = `${score}%`;
+        document.getElementById('sentimentValue').textContent = score > 60 ? 'Bullish' : (score < 40 ? 'Bearish' : 'Neutral');
+
+        // 4. News Feed
+        document.getElementById('newsList').innerHTML = data.news.map(n => `
+          <div class="news-item">
+            <div class="news-meta">
+              <span>${n.source}</span>
+              <span>${new Date(n.datetime * 1000).toLocaleTimeString()}</span>
+            </div>
+            <div class="news-title">${n.headline}</div>
+          </div>
+        `).join('');
+
+        // 5. Charting
+        drawProChart(data.chart.map(c => c.close));
+
       } catch (err) {
-        document.getElementById('providerStatus').textContent = 'OFFLINE';
+        console.error("Terminal Failure:", err);
       }
     }
 
-    function renderDashboard(symbol, data) {
-      document.getElementById('nameDisplay').textContent = data.profile.name;
-      document.getElementById('priceDisplay').textContent = `$${data.quote.c.toLocaleString()}`;
-      
-      const pct = data.quote.dp;
-      const changeEl = document.getElementById('changeDisplay');
-      changeEl.textContent = `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}%`;
-      changeEl.style.color = pct >= 0 ? 'var(--up-green)' : 'var(--down-red)';
-
-      document.getElementById('exchangeDisplay').textContent = data.profile.exchange;
-      document.getElementById('mktCap').textContent = `$${(data.profile.marketCap / 1e9).toFixed(2)}B`;
-
-      drawMidnightChart(data.chart.map(c => c.close));
-
-      document.getElementById('newsList').innerHTML = data.news.map(n => `
-        <div class="news-card">
-          <div class="source-tag">${n.source}</div>
-          <div class="headline">${n.headline}</div>
-        </div>
-      `).join('');
-
-      document.getElementById('providerStatus').textContent = 'LIVE';
-    }
-
-    function drawMidnightChart(points) {
-      const canvas = document.getElementById('marketChart');
+    function drawProChart(points) {
+      const canvas = document.getElementById('mainChart');
       const ctx = canvas.getContext('2d');
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const dpr = window.devicePixelRatio || 1;
+      
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.scale(dpr, dpr);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Neon Gradient
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, 'rgba(0, 136, 255, 0.5)');
-      gradient.addColorStop(1, 'rgba(0, 242, 255, 0)');
-
+      // Glow Effect
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
+      
       ctx.beginPath();
-      ctx.strokeStyle = '#00f2ff';
+      ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 3;
       ctx.lineJoin = 'round';
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#0088ff';
 
       const max = Math.max(...points);
       const min = Math.min(...points);
       const range = max - min;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
 
       points.forEach((p, i) => {
-        const x = (i / (points.length - 1)) * canvas.width;
-        const y = canvas.height - ((p - min) / range) * canvas.height;
+        const x = (i / (points.length - 1)) * w;
+        const y = h - ((p - min) / range) * h;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       });
 
       ctx.stroke();
     }
-
-    window.onload = loadTicker;
   </script>
 </body>
 </html>
