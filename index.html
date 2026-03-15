@@ -200,16 +200,6 @@
       transition: width 1s ease-in-out;
     }
 
-    .meter-marker {
-      position: absolute;
-      top: -4px;
-      width: 4px;
-      height: 16px;
-      background: white;
-      box-shadow: 0 0 10px white;
-      transform: translateX(-50%);
-    }
-
     /* --- CHART AREA --- */
     .chart-box {
       background: #000;
@@ -218,12 +208,11 @@
       height: 400px;
       position: relative;
       overflow: hidden;
-      cursor: crosshair; /* Added cursor */
+      cursor: crosshair;
     }
 
     canvas { width: 100%; height: 100%; display: block; }
 
-    /* Price Tag for Crosshair */
     #chartOverlay {
       position: absolute;
       background: var(--accent-blue);
@@ -236,6 +225,22 @@
       display: none;
       z-index: 10;
       box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    /* Loading UI */
+    #chartLoader {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: none; justify-content: center;
+      align-items: center; z-index: 5; flex-direction: column; gap: 10px;
+    }
+    .pulse {
+      width: 40px; height: 40px; background: var(--accent-blue);
+      border-radius: 50%; animation: pulse-blue 1.5s infinite ease-in-out;
+    }
+    @keyframes pulse-blue {
+      0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+      70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+      100% { transform: scale(0.8); opacity: 0.5; }
     }
 
     /* --- NEWS ITEMS --- */
@@ -319,6 +324,7 @@
       </div>
 
       <div class="chart-box" id="chartBox">
+        <div id="chartLoader"><div class="pulse"></div><div style="font-size: 0.7rem; color: var(--accent-blue); font-weight: 800; margin-top:10px;">SYNCING MARKET DATA...</div></div>
         <div id="chartOverlay"></div>
         <canvas id="mainChart"></canvas>
       </div>
@@ -335,11 +341,11 @@
   </main>
 
   <script>
-    // --- APP LOGIC ---
-    let activeChartData = []; // Store data for hover interaction
+    let activeChartData = [];
     const input = document.getElementById('tickerInput');
     const chartBox = document.getElementById('chartBox');
     const overlay = document.getElementById('chartOverlay');
+    const loader = document.getElementById('chartLoader');
     
     input.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') loadData(input.value.toUpperCase().trim());
@@ -347,12 +353,12 @@
 
     async function loadData(ticker) {
       if (!ticker) return;
+      loader.style.display = 'flex'; // Show loader on start
       
       try {
         const response = await fetch(`/api/stak?ticker=${ticker}`);
         const data = await response.json();
         
-        // 1. Update Core UI
         document.getElementById('tickerEcho').textContent = ticker;
         document.getElementById('nameDisplay').textContent = data.profile.name;
         document.getElementById('priceDisplay').textContent = `$${data.quote.c.toLocaleString()}`;
@@ -362,18 +368,14 @@
         changeEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
         changeEl.style.color = pct >= 0 ? 'var(--up-green)' : 'var(--down-red)';
 
-        // 2. Metrics
         document.getElementById('mktCap').textContent = `$${(data.profile.marketCap / 1e9).toFixed(2)}B`;
         document.getElementById('exchangeDisplay').textContent = data.profile.exchange;
 
-        // 3. AI Intelligence Logic
         let score = 50 + (pct * 8); 
         score = Math.max(5, Math.min(95, score));
-
         const meter = document.getElementById('sentimentMeter');
         const valText = document.getElementById('sentimentValue');
         const label = document.getElementById('ratingLabel');
-
         meter.style.width = `${score}%`;
 
         if (score >= 65) {
@@ -381,7 +383,7 @@
           label.textContent = "BUY";
           label.style.background = "var(--up-green)";
           label.style.color = "#000";
-        } else if (score > 35 && score < 65) {
+        } else if (score > 35) {
           valText.textContent = "Neutral";
           label.textContent = "HOLD";
           label.style.background = "var(--accent-blue)";
@@ -393,23 +395,27 @@
           label.style.color = "#fff";
         }
 
-        // 4. News Feed
         document.getElementById('newsList').innerHTML = data.news.map(n => `
           <div class="news-item">
-            <div class="news-meta">
-              <span>${n.source}</span>
-              <span>${new Date(n.datetime * 1000).toLocaleTimeString()}</span>
-            </div>
+            <div class="news-meta"><span>${n.source}</span><span>${new Date(n.datetime * 1000).toLocaleTimeString()}</span></div>
             <div class="news-title">${n.headline}</div>
           </div>
         `).join('');
 
-        // 5. Charting
-        activeChartData = data.chart.map(c => c.close);
-        drawProChart(activeChartData);
+        // Charting with delay fix
+        if (data.chart && data.chart.length > 0) {
+          activeChartData = data.chart.map(c => c.close);
+          setTimeout(() => {
+            loader.style.display = 'none';
+            drawProChart(activeChartData);
+          }, 400);
+        } else {
+          loader.style.display = 'none';
+        }
 
       } catch (err) {
         console.error("Terminal Failure:", err);
+        loader.style.display = 'none';
       }
     }
 
@@ -420,7 +426,6 @@
       
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
-      
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.scale(dpr, dpr);
@@ -431,88 +436,44 @@
       const max = Math.max(...points);
       const min = Math.min(...points);
       const range = max - min || 1;
-      const padding = 20;
+      const padding = 30;
 
       const getX = (i) => (i / (points.length - 1)) * w;
-      const getY = (p) => h - padding - ((p - min) / range) * (h - padding * 2);
+      const getY = (p) => (h - padding) - ((p - min) / range) * (h - padding * 2);
 
-      // Gradient Fill
       const grad = ctx.createLinearGradient(0, 0, 0, h);
       grad.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-      grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
-      
+      grad.addColorStop(1, 'transparent');
       ctx.beginPath();
-      points.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(getX(i), h);
-        ctx.lineTo(getX(i), getY(p));
-      });
-      ctx.lineTo(w, h);
-      ctx.fillStyle = grad;
-      ctx.fill();
+      points.forEach((p, i) => { if (i === 0) ctx.moveTo(getX(i), h); ctx.lineTo(getX(i), getY(p)); });
+      ctx.lineTo(w, h); ctx.fillStyle = grad; ctx.fill();
 
-      // Glow Effect & Line
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
-      ctx.beginPath();
-      ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 3;
-      ctx.lineJoin = 'round';
+      ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
+      ctx.beginPath(); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+      points.forEach((p, i) => { if (i === 0) ctx.moveTo(getX(i), getY(p)); else ctx.lineTo(getX(i), getY(p)); });
+      ctx.stroke(); ctx.shadowBlur = 0;
 
-      points.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(getX(i), getY(p)); else ctx.lineTo(getX(i), getY(p));
-      });
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Crosshair Logic
       if (mouseX !== null) {
         const index = Math.round((mouseX / w) * (points.length - 1));
         const p = points[index];
-        const x = getX(index);
-        const y = getY(p);
-
-        // Lines
-        ctx.setLineDash([5, 5]);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        const x = getX(index), y = getY(p);
+        ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
         ctx.setLineDash([]);
-
-        // Active Dot
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff';
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#fff';
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Overlay Tooltip
-        overlay.style.display = 'block';
-        overlay.style.left = `${x + 10}px`;
-        overlay.style.top = `${y - 30}px`;
+        ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+        overlay.style.display = 'block'; overlay.style.left = `${x + 10}px`; overlay.style.top = `${y - 35}px`;
         overlay.textContent = `$${p.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-      } else {
-        overlay.style.display = 'none';
-      }
+      } else { overlay.style.display = 'none'; }
     }
 
-    // Interaction Listeners
     chartBox.addEventListener('mousemove', (e) => {
       if (!activeChartData.length) return;
       const rect = chartBox.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      drawProChart(activeChartData, x);
+      drawProChart(activeChartData, e.clientX - rect.left);
     });
-
-    chartBox.addEventListener('mouseleave', () => {
-      if (!activeChartData.length) return;
-      drawProChart(activeChartData);
-    });
-
-    window.addEventListener('resize', () => {
-      if (activeChartData.length) drawProChart(activeChartData);
-    });
+    chartBox.addEventListener('mouseleave', () => { if (activeChartData.length) drawProChart(activeChartData); });
+    window.addEventListener('resize', () => { if (activeChartData.length) drawProChart(activeChartData); });
   </script>
 </body>
 </html>
